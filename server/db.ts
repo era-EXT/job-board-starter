@@ -15,7 +15,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Determine if we're in a serverless environment
-const isServerless = process.env.DATABASE_URL.includes('pooler.internal.neon');
+const isServerless = process.env.DATABASE_URL.includes('neondb');
 
 let db: any;
 
