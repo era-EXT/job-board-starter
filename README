@@ -1,0 +1,77 @@
+
+# Job Board Application
+
+A full-stack job board application built with React, Express, and PostgreSQL.
+
+## Local Development Setup
+
+### Prerequisites
+
+- Node.js (v20 or later)
+- PostgreSQL (v15 or later)
+- npm
+
+### Quick Start
+
+1. Clone the repository and install dependencies:
+```bash
+npm install
+```
+
+2. Start the docker container for postgres:
+```bash
+ docker-compose up
+```
+
+3. Seed the database with initial data:
+```bash
+npm run db:push
+npm run db:seed
+```
+
+4. Start the development server:
+```bash
+npm run dev
+```
+
+The application will be available at http://localhost:5000
+
+### Project Structure
+
+- `/client` - React frontend application
+- `/server` - Express backend server
+- `/shared` - Shared types and schemas
+- `/migrations` - Database migrations
+
+### Available Scripts
+
+- `npm run dev` - Start the development server
+- `npm run build` - Build for production
+- `npm run start` - Start the production server
+- `npm run db:push` - Push database schema changes
+- `npm run db:seed` - Seed the database with initial data
+- `npm run db:generate` - Generate new migrations
+- `npm run db:migrate` - Run migrations
+
+### Deployment
+
+This project is designed to be deployed on Replit. For deployment, use the Replit Deployments feature.
+
+### Database Schema
+
+The application uses two main tables:
+- `companies` - Stores company information
+- `jobs` - Stores job listings with references to companies
+
+### API Endpoints
+
+- `GET /api/jobs` - List all jobs
+- `GET /api/jobs/:id` - Get specific job details
+- `GET /api/jobs?q=search` - Search jobs with filters
+
+### Technologies Used
+
+- Frontend: React, TypeScript, Tailwind CSS
+- Backend: Express, Node.js
+- Database: PostgreSQL with Drizzle ORM
+- Development: Vite, TypeScript

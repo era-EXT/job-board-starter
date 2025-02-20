@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.json",
+  "include": ["src/**/*"],
+  "compilerOptions": {
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@shared/*": ["../shared/*"]
+    }
+  },
+  "references": [{ "path": "./tsconfig.node.json" }]
+} 
