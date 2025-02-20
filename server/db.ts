@@ -26,6 +26,7 @@ if (isServerless) {
   db = drizzle(pool, { schema });
 } else {
   // Local development
+  console.log("🔌 Connecting to local database", process.env.DATABASE_URL);
   const client = postgres(process.env.DATABASE_URL, {
     max: 1,
     prepare: false,

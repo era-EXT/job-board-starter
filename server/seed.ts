@@ -76,10 +76,11 @@ const seedJobs = [
 async function seed() {
   try {
     console.log("🗑️ Dropping existing tables...");
-    // Drop existing tables if they exist
+    // Drop existing tables and migration state
     await db.execute(sql`
       DROP TABLE IF EXISTS jobs CASCADE;
       DROP TABLE IF EXISTS companies CASCADE;
+      DROP SCHEMA IF EXISTS drizzle CASCADE;
     `);
 
     console.log("🏗️ Running migrations...");
