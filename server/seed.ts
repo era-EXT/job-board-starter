@@ -4,74 +4,15 @@ import { sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from 'postgres';
 import { config } from 'dotenv'
+import { sampleData } from "../client/src/lib/jobs.js";
 config() // Load environment variables from .env file
 
 // Separate postgres client for migrations
 const migrationClient = postgres(process.env.DATABASE_URL!, { max: 1 });
 
-const seedCompanies = [
-  {
-    name: "Netflix",
-    logo: "https://logo.clearbit.com/netflix.com",
-    description: "Leading streaming entertainment service company.",
-    website: "https://netflix.com",
-    industry: "Entertainment Technology",
-    size: "10000+",
-    headquarters: "Los Gatos, CA",
-    founded: 1997,
-  },
-  {
-    name: "Salesforce",
-    logo: "https://logo.clearbit.com/salesforce.com",
-    description: "Global leader in CRM and enterprise cloud computing solutions.",
-    website: "https://salesforce.com",
-    industry: "Enterprise Software",
-    size: "50000+",
-    headquarters: "San Francisco, CA",
-    founded: 1999,
-  },
-  {
-    name: "Adobe",
-    logo: "https://logo.clearbit.com/adobe.com",
-    description: "Global leader in digital media and digital marketing solutions.",
-    website: "https://adobe.com",
-    industry: "Software",
-    size: "25000+",
-    headquarters: "San Jose, CA",
-    founded: 1982,
-  }
-];
-
-const seedJobs = [
-  {
-    title: "Senior Software Engineer",
-    location: "Remote, US",
-    type: "Full-time",
-    description: "We are looking for a talented Senior Software Engineer to join our team...",
-    requirements: "- 5+ years of experience\n- Strong JavaScript/TypeScript skills\n- Experience with React",
-    responsibilities: "- Design and implement new features\n- Lead technical initiatives\n- Mentor junior developers",
-    salary: "$150,000 - $200,000",
-    benefits: "- Health insurance\n- 401(k) matching\n- Unlimited PTO",
-    applicationUrl: "https://careers.company.com/senior-engineer",
-    experience: "Senior",
-    department: "Engineering",
-    remote: "Remote",
-  },
-  {
-    title: "Product Designer",
-    location: "San Francisco, CA",
-    type: "Full-time",
-    description: "Join our design team to create world-class user experiences...",
-    requirements: "- 3+ years of product design experience\n- Strong portfolio\n- Experience with Figma",
-    responsibilities: "- Create user interfaces\n- Conduct user research\n- Collaborate with engineers",
-    salary: "$120,000 - $160,000",
-    benefits: "- Health insurance\n- 401(k) matching\n- Flexible hours",
-    applicationUrl: "https://careers.company.com/product-designer",
-    experience: "Mid Level",
-    department: "Design",
-    remote: "Hybrid",
-  }
-];
+// Replace the existing seedCompanies and seedJobs with data from jobs.ts
+const seedCompanies = sampleData.companies.map(({ id, createdAt, ...company }) => company);
+const seedJobs = sampleData.jobs.map(({ id, createdAt, ...job }) => job);
 
 async function seed() {
   try {
