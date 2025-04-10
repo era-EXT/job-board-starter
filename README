@@ -47,10 +47,6 @@ The application will be available at http://localhost:3000
 - `npm run db:migrate` - Run migrations
 - `npm run db:setup` - Set up and seed the database in one command
 
-### Deployment
-
-This project is designed to be deployed on Replit. For deployment, use the Replit Deployments feature.
-
 ### Database Schema
 
 The application uses two main tables:
