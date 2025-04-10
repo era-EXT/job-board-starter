@@ -1,13 +1,18 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
-import postgres from "postgres";
+import { PGlite } from '@electric-sql/pglite';
+import { drizzle } from "drizzle-orm/pglite";
+import { migrate } from "drizzle-orm/pglite/migrator";
 import { config } from 'dotenv';
 
 config(); // Load environment variables
 
+// Create a data directory for persistent storage
+const DATA_DIR = './data';
+
 const runMigrations = async () => {
-  const migrationClient = postgres(process.env.DATABASE_URL!, { max: 1 });
-  const db = drizzle(migrationClient);
+  const client = new PGlite({
+    dataDir: DATA_DIR,
+  });
+  const db = drizzle({ client });
 
   console.log("⏳ Running migrations...");
   
@@ -16,7 +21,6 @@ const runMigrations = async () => {
   });
 
   console.log("✅ Migrations completed!");
-  await migrationClient.end();
 };
 
 runMigrations().catch((err) => {

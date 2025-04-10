@@ -1,28 +1,49 @@
 import { db } from "./db.js";
 import { companies, jobs } from "../shared/schema.js";
 import { sql } from "drizzle-orm";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
-import postgres from 'postgres';
+import { migrate } from "drizzle-orm/pglite/migrator";
 import { config } from 'dotenv'
 import { sampleData } from "../client/src/lib/jobs.js";
 config() // Load environment variables from .env file
-
-// Separate postgres client for migrations
-const migrationClient = postgres(process.env.DATABASE_URL!, { max: 1 });
 
 // Replace the existing seedCompanies and seedJobs with data from jobs.ts
 const seedCompanies = sampleData.companies.map(({ id, createdAt, ...company }) => company);
 const seedJobs = sampleData.jobs.map(({ id, createdAt, ...job }) => job);
 
 async function seed() {
+  let isShuttingDown = false;
+
+  const cleanup = async (signal?: string) => {
+    if (isShuttingDown) return; // Prevent multiple cleanup attempts
+    isShuttingDown = true;
+
+    console.log(`\n${signal ? `Received ${signal}. ` : ''}Cleaning up...`);
+    try {
+      console.log('Cleanup complete.');
+      process.exit(0);
+    } catch (err) {
+      console.error('Error during cleanup:', err);
+      process.exit(1);
+    }
+  };
+
+  // Use once to ensure handlers only fire once
+  process.once('SIGTERM', () => cleanup('SIGTERM'));
+  process.once('SIGINT', () => cleanup('SIGINT'));
+
   try {
     console.log("🗑️ Dropping existing tables...");
-    // Drop existing tables and migration state
-    await db.execute(sql`
-      DROP TABLE IF EXISTS jobs CASCADE;
-      DROP TABLE IF EXISTS companies CASCADE;
-      DROP SCHEMA IF EXISTS drizzle CASCADE;
-    `);
+    // Drop existing tables and migration state - execute each statement separately for pglite
+    try {
+      await db.execute(sql`DROP TABLE IF EXISTS jobs CASCADE;`);
+      console.log("Dropped jobs table");
+      await db.execute(sql`DROP TABLE IF EXISTS companies CASCADE;`);
+      console.log("Dropped companies table");
+      await db.execute(sql`DROP SCHEMA IF EXISTS drizzle CASCADE;`);
+      console.log("Dropped drizzle schema");
+    } catch (err) {
+      console.log("Some tables might not exist yet, continuing...");
+    }
 
     console.log("🏗️ Running migrations...");
     // Run migrations
@@ -46,8 +67,10 @@ async function seed() {
     
     // Insert companies
     console.log("Inserting companies...");
-    const insertedCompanies = await db.insert(companies).values(seedCompanies).returning();
-    console.log(`✅ Inserted ${insertedCompanies.length} companies:`, insertedCompanies);
+    const insertedCompanies = await db.insert(companies)
+      .values(seedCompanies)
+      .returning();
+    console.log(`✅ Inserted ${insertedCompanies.length} companies`);
     
     // Insert jobs with company references
     console.log("Inserting jobs...");
@@ -56,10 +79,13 @@ async function seed() {
       companyId: insertedCompanies[index % insertedCompanies.length].id
     }));
     
-    const insertedJobs = await db.insert(jobs).values(jobsWithCompanyIds).returning();
-    console.log(`✅ Inserted ${insertedJobs.length} jobs:`, insertedJobs);
+    const insertedJobs = await db.insert(jobs)
+      .values(jobsWithCompanyIds)
+      .returning();
+    console.log(`✅ Inserted ${insertedJobs.length} jobs`);
     
     console.log("✨ Seeding complete!");
+    await cleanup();
   } catch (error) {
     if (error instanceof Error) {
       console.error("❌ Seeding failed with error:", {
@@ -70,10 +96,7 @@ async function seed() {
     } else {
       console.error("❌ Seeding failed with unknown error:", error);
     }
-    throw error;
-  } finally {
-    // Close the migration client
-    await migrationClient.end();
+    await cleanup();
   }
 }
 
@@ -82,7 +105,7 @@ if (typeof window !== 'undefined') {
   throw new Error('This script must be run in Node.js');
 }
 
-seed().catch((error) => {
+seed().catch(async (error) => {
   console.error("Fatal seeding error:", error);
   process.exit(1);
 });

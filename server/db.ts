@@ -1,37 +1,19 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import postgres from 'postgres';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import { drizzle as drizzlePostgres } from 'drizzle-orm/postgres-js';
-import ws from 'ws';
+import { PGlite } from '@electric-sql/pglite';
+import { drizzle } from 'drizzle-orm/pglite';
 import * as schema from "@shared/schema";
 
 import { config } from 'dotenv'
 config() // Load environment variables from .env file
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
-}
+// Create a data directory for persistent storage
+const DATA_DIR = './data';
 
-// Determine if we're in a serverless environment
-const isServerless = process.env.DATABASE_URL.includes('neondb');
+// Create a new PGlite instance
+const client = new PGlite({
+  dataDir: DATA_DIR, // Store data in a local directory
+});
 
-let db: any;
-
-if (isServerless) {
-  // Serverless environment (production)
-  neonConfig.webSocketConstructor = ws;
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  db = drizzle(pool, { schema });
-} else {
-  // Local development
-  console.log("🔌 Connecting to local database", process.env.DATABASE_URL);
-  const client = postgres(process.env.DATABASE_URL, {
-    max: 1,
-    prepare: false,
-  });
-  db = drizzlePostgres(client, { schema });
-}
+// Initialize Drizzle with the PGlite client
+const db = drizzle({ client, schema });
 
 export { db };
