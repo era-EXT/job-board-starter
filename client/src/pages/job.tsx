@@ -73,7 +73,7 @@ export default function Job() {
               </div>
               <Button
                 size="lg"
-                onClick={() => window.open(job.applicationUrl, "_blank")}
+                onClick={() => window.open('https://joinhandshake.com', "_blank")}
               >
                 Apply on Handshake
               </Button>
