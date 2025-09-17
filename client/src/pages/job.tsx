@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Building2, MapPin, Clock } from "lucide-react";
@@ -7,10 +7,18 @@ import type { JobWithCompany } from "@shared/schema";
 
 export default function Job() {
   const { id } = useParams();
-  
-  const { data: job, isLoading } = useQuery<JobWithCompany>({
-    queryKey: [`/api/jobs/${id}`],
-  });
+  const [job, setJob] = useState<JobWithCompany | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/jobs/${id}`)
+      .then(res => res.json())
+      .then(data => {
+        setJob(data);
+        setIsLoading(false);
+      })
+      .catch(() => setIsLoading(false));
+  }, [id]);
 
   if (isLoading) {
     return (

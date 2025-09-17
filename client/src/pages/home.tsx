@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SearchIcon } from "lucide-react";
@@ -15,24 +14,25 @@ export default function Home() {
     company: "",
   });
 
-  const { data: jobs, isLoading } = useQuery<JobWithCompany[]>({
-    queryKey: [
-      "/api/jobs",
-      search,
-      filters.location,
-      filters.type,
-      filters.company,
-    ],
-    queryFn: ({ queryKey: [url, q, location, type, company] }) =>
-      fetch(
-        `${url}?${new URLSearchParams({
-          ...(q ? { q: q as string } : {}),
-          ...(location ? { location: location as string } : {}),
-          ...(type ? { type: type as string } : {}),
-          ...(company ? { company: company as string } : {}),
-        })}`
-      ).then((r) => r.json()),
-  });
+  const [jobs, setJobs] = useState<JobWithCompany[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    const params = new URLSearchParams();
+    if (search) params.set('q', search);
+    if (filters.location) params.set('location', filters.location);
+    if (filters.type) params.set('type', filters.type);
+    if (filters.company) params.set('company', filters.company);
+
+    fetch(`/api/jobs?${params}`)
+      .then(res => res.json())
+      .then(data => {
+        setJobs(data);
+        setIsLoading(false);
+      })
+      .catch(() => setIsLoading(false));
+  }, [search, filters.location, filters.type, filters.company]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
