@@ -1,13 +1,31 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SearchIcon } from "lucide-react";
 import SearchFilters from "@/components/search-filters";
 import JobCard from "@/components/job-card";
-import type { JobWithCompany } from "@shared/schema";
+import type { JobWithCompany, InsertJob } from "@shared/schema";
 
 export default function Home() {
+  const queryClient = useQueryClient();
+
+  // Example mutation for creating a job
+  const { mutate: createJob, isPending: isCreating } = useMutation({
+    mutationFn: async (newJob: InsertJob) => {
+      const response = await fetch('/api/jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newJob)
+      });
+      if (!response.ok) throw new Error('Failed to create job');
+      return response.json();
+    },
+    // After successful creation, refresh the jobs list
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/jobs'] });
+    }
+  });
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({
     location: "",
