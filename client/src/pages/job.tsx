@@ -9,7 +9,11 @@ export default function Job() {
   const { id } = useParams();
   
   const { data: job, isLoading } = useQuery<JobWithCompany>({
-    queryKey: [`/api/jobs/${id}`],
+    queryKey: ["/api/jobs", id],
+    queryFn: async () => {
+      const response = await fetch(`/api/jobs/${id}`);
+      return response.json();
+    }
   });
 
   if (isLoading) {

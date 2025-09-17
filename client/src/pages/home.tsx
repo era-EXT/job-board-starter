@@ -16,22 +16,19 @@ export default function Home() {
   });
 
   const { data: jobs, isLoading } = useQuery<JobWithCompany[]>({
-    queryKey: [
-      "/api/jobs",
-      search,
-      filters.location,
-      filters.type,
-      filters.company,
-    ],
-    queryFn: ({ queryKey: [url, q, location, type, company] }) =>
-      fetch(
-        `${url}?${new URLSearchParams({
-          ...(q ? { q: q as string } : {}),
-          ...(location ? { location: location as string } : {}),
-          ...(type ? { type: type as string } : {}),
-          ...(company ? { company: company as string } : {}),
-        })}`
-      ).then((r) => r.json()),
+    queryKey: ["/api/jobs", search, filters],
+    queryFn: async () => {
+      // Build query params
+      const params = new URLSearchParams();
+      if (search) params.set('q', search);
+      if (filters.location) params.set('location', filters.location);
+      if (filters.type) params.set('type', filters.type);
+      if (filters.company) params.set('company', filters.company);
+
+      // Simple fetch
+      const response = await fetch(`/api/jobs?${params}`);
+      return response.json();
+    }
   });
 
   const handleSearch = (e: React.FormEvent) => {
