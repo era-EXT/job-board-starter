@@ -30,6 +30,17 @@ export async function registerRoutes(app: Express) {
     res.json(job);
   });
 
+  app.post("/api/jobs", async (req, res) => {
+    try {
+      const newJob = req.body;
+      const job = await storage.createJob(newJob);
+      res.status(201).json(job);
+    } catch (error) {
+      console.error("Error creating job:", error);
+      res.status(500).json({ message: "Failed to create job" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

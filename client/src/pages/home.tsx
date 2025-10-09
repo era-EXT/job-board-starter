@@ -1,13 +1,31 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SearchIcon } from "lucide-react";
 import SearchFilters from "@/components/search-filters";
 import JobCard from "@/components/job-card";
-import type { JobWithCompany } from "@shared/schema";
+import type { JobWithCompany, InsertJob } from "@shared/schema";
 
 export default function Home() {
+  const queryClient = useQueryClient();
+
+  // Example mutation for creating a job
+  const { mutate: createJob, isPending: isCreating } = useMutation({
+    mutationFn: async (newJob: InsertJob) => {
+      const response = await fetch('/api/jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newJob)
+      });
+      if (!response.ok) throw new Error('Failed to create job');
+      return response.json();
+    },
+    // After successful creation, refresh the jobs list
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/jobs'] });
+    }
+  });
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({
     location: "",
@@ -16,22 +34,19 @@ export default function Home() {
   });
 
   const { data: jobs, isLoading } = useQuery<JobWithCompany[]>({
-    queryKey: [
-      "/api/jobs",
-      search,
-      filters.location,
-      filters.type,
-      filters.company,
-    ],
-    queryFn: ({ queryKey: [url, q, location, type, company] }) =>
-      fetch(
-        `${url}?${new URLSearchParams({
-          ...(q ? { q: q as string } : {}),
-          ...(location ? { location: location as string } : {}),
-          ...(type ? { type: type as string } : {}),
-          ...(company ? { company: company as string } : {}),
-        })}`
-      ).then((r) => r.json()),
+    queryKey: ["/api/jobs", search, filters],
+    queryFn: async () => {
+      // Build query params
+      const params = new URLSearchParams();
+      if (search) params.set('q', search);
+      if (filters.location) params.set('location', filters.location);
+      if (filters.type) params.set('type', filters.type);
+      if (filters.company) params.set('company', filters.company);
+
+      // Simple fetch
+      const response = await fetch(`/api/jobs?${params}`);
+      return response.json();
+    }
   });
 
   const handleSearch = (e: React.FormEvent) => {

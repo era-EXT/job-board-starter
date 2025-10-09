@@ -6,6 +6,7 @@ export interface IStorage {
   getJobs(): Promise<JobWithCompany[]>;
   getJob(id: number): Promise<JobWithCompany | undefined>;
   searchJobs(query: string, filters: { location?: string; type?: string; company?: string }): Promise<JobWithCompany[]>;
+  createJob(job: InsertJob): Promise<JobWithCompany>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -67,6 +68,22 @@ export class DatabaseStorage implements IStorage {
     }
 
     return result;
+  }
+
+  async createJob(job: InsertJob): Promise<JobWithCompany> {
+    // Insert the job
+    const [newJob] = await db
+      .insert(jobs)
+      .values(job)
+      .returning();
+
+    // Get the full job with company details
+    const jobWithCompany = await this.getJob(newJob.id);
+    if (!jobWithCompany) {
+      throw new Error('Failed to create job');
+    }
+
+    return jobWithCompany;
   }
 }
 
